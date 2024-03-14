@@ -12,7 +12,6 @@ from matplotlib import pyplot as plt
 import matplotlib
 from xml.etree import ElementTree as ET
 import glob
-import numpy as np
 import os
 
 FILE = Path(__file__).resolve()
@@ -28,7 +27,7 @@ def plot_evolve(evolve_csv=ROOT / "result.csv"):
     matplotlib.rc("font", **{"size": 8})
 
     plt.plot(x[:, -2], x[:, -1])
-    plt.title(f"iou:(0-1) PR curves")
+    plt.title("iou:(0-1) PR curves")
     f = evolve_csv.with_suffix(".png")  # filename
     plt.savefig(f, dpi=200)
     plt.close()
@@ -52,7 +51,7 @@ class Dataset:
                     raise FileNotFoundError(f"{p} does not exist")
 
             self.im_files = sorted(f)
-            assert self.im_files, f"No xml file found"
+            assert self.im_files, "No xml file found"
 
         except Exception as e:
             raise Exception(f"Error loading data from {path}:") from e

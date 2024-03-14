@@ -53,19 +53,23 @@ class Loggers:
         # Messages
         if not comet_ml:
             prefix = colorstr("Comet: ")
-            s = f"run 'pip install comet_ml' to automatically track and visualize runs in Comet"
+            s = "run 'pip install comet_ml' to automatically track and visualize runs in Comet"
             self.logger.info(s)
 
         # TensorBoard
         s = self.save_dir
         if "tb" in self.include:
             prefix = colorstr("TensorBoard: ")
-            self.logger.info(f"{prefix}Start with 'tensorboard --logdir {s.parent}', view at http://localhost:6006/")
+            self.logger.info(
+                f"{prefix}Start with 'tensorboard --logdir {s.parent}', view at http://localhost:6006/"
+            )
             self.tb = SummaryWriter(str(s))
 
             # Comet
             if comet_ml and "comet" in self.include:
-                if isinstance(self.opt.resume, str) and self.opt.resume.startswith("comet://"):
+                if isinstance(self.opt.resume, str) and self.opt.resume.startswith(
+                    "comet://"
+                ):
                     run_id = self.opt.resume.split("/")[-1]
                     self.comet_logger = CometLogger(self.opt, self.hyp, run_id=run_id)
 
@@ -89,5 +93,9 @@ def web_project_name(project):
     # Convert local project name to web project name
     if not project.startswith("runs/train"):
         return project
-    suffix = "-Classify" if project.endswith("-cls") else "-Segment" if project.endswith("-seg") else ""
+    suffix = (
+        "-Classify"
+        if project.endswith("-cls")
+        else "-Segment" if project.endswith("-seg") else ""
+    )
     return

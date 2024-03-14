@@ -1,17 +1,16 @@
 # coding=utf-8
-from xml.etree import ElementTree as ET
 import glob
 from pathlib import Path
-import os
-import numpy as np
+from xml.etree import ElementTree as ET
 
-"""数据加载器，加载xml文件"""
-from utils.general import LOGGER
+import numpy as np
 from torch.utils.data import dataloader
+
+from utils.general import LOGGER
 
 
 def create_dataloader(path, batch=1):
-    LOGGER.info(f'GT dataloader path: {path}\tbatch_size: {batch} ')
+    LOGGER.info(f"GT dataloader path: {path}\tbatch_size: {batch} ")
     dataset = Dataset(path, batch)
     loader = InfiniteDataLoader(dataset, batch)
     return loader, dataset
@@ -28,14 +27,14 @@ class Dataset:
                 p = Path(p)  # os-agnostic
                 if p.is_dir():  # dir
                     f += glob.glob(str(p / "**" / "*.xml"), recursive=True)
-                elif p.is_file() and p.name.endswith('.xml'):  # file
+                elif p.is_file() and p.name.endswith(".xml"):  # file
                     f += p  #
-                    LOGGER.info(f'file name:{p}')
+                    LOGGER.info(f"file name:{p}")
                 else:
                     raise FileNotFoundError(f"{p} does not exist")
 
             self.im_files = sorted(f)
-            assert self.im_files, f"No xml file found"
+            assert self.im_files, "No xml file found"
 
         except Exception as e:
             raise Exception(f"Error loading data from {path}:") from e
@@ -49,25 +48,30 @@ class Dataset:
         labelname = list()
         difficult = list()
 
-        file = anno.find('path').text.strip()
-        filename = file.split('\\')[-1] ## filename 000001.jpg
+        file = anno.find("path").text.strip()
+        filename = file.split("\\")[-1]  ## filename 000001.jpg
 
         # 获取图像标签大小
         img_sz = [0, 0]  # width height
-        for img_info in anno.findall('size'):
-            img_sz[0] = int(img_info.find('width').text)
-            img_sz[1] = int(img_info.find('height').text)
+        for img_info in anno.findall("size"):
+            img_sz[0] = int(img_info.find("width").text)
+            img_sz[1] = int(img_info.find("height").text)
 
-        for obj in anno.findall('object'):
-            if int(obj.find('difficult').text) == 1:  # 0表示易识别，1表示难识别
+        for obj in anno.findall("object"):
+            if int(obj.find("difficult").text) == 1:  # 0表示易识别，1表示难识别
                 continue
 
-            difficult.append(int(obj.find('difficult').text))
-            bndbox_anno = obj.find('bndbox')
+            difficult.append(int(obj.find("difficult").text))
+            bndbox_anno = obj.find("bndbox")
             # bbox.append([float(bndbox_anno.find(tag).text) / img_sz[1] if tag in ['ymin', 'ymax'] else float(
             #     bndbox_anno.find(tag).text) / img_sz[0] for tag in ('xmin', 'ymin', 'xmax', 'ymax')])
-            bbox.append([int(bndbox_anno.find(tag).text) for tag in ('xmin', 'ymin', 'xmax', 'ymax')])
-            labelname.append(obj.find('name').text.strip())
+            bbox.append(
+                [
+                    int(bndbox_anno.find(tag).text)
+                    for tag in ("xmin", "ymin", "xmax", "ymax")
+                ]
+            )
+            labelname.append(obj.find("name").text.strip())
 
         bbox = np.stack(bbox).astype(np.float32)  ##boundingbox
         # label = np.stack(label).astype(np.int32)  #标签读取，需要

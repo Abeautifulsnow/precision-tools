@@ -1,24 +1,29 @@
 # coding=utf-8
-from pathlib import Path
-import os
+import contextlib
+import glob
+import inspect
 import logging
 import logging.config
-import platform
-import torch
-import numpy as np
-import contextlib
-import time
-import inspect
+import os
 import sys
-import glob
+import time
+from pathlib import Path
+
 import cv2
-import torchvision
+import numpy as np
+import torch
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # root directory
 
 LOGGING_NAME = "log"
-LOGGERS = ("csv", "tb", "wandb", "clearml", "comet")  # *.csv, TensorBoard, Weights & Biases, ClearML
+LOGGERS = (
+    "csv",
+    "tb",
+    "wandb",
+    "clearml",
+    "comet",
+)  # *.csv, TensorBoard, Weights & Biases, ClearML
 
 
 def register_action(self, hook, name="", callback=None):
@@ -30,7 +35,9 @@ def register_action(self, hook, name="", callback=None):
         name: The name of the action for later reference
         callback: The callback to fire
     """
-    assert hook in self._callbacks, f"hook '{hook}' not found in callbacks {self._callbacks}"
+    assert (
+        hook in self._callbacks
+    ), f"hook '{hook}' not found in callbacks {self._callbacks}"
     assert callable(callback), f"callback '{callback}' is not callable"
     self._callbacks[hook].append({"name": name, "callback": callback})
 
@@ -47,7 +54,9 @@ def colorstr(*input):
 
     See https://en.wikipedia.org/wiki/ANSI_escape_code.
     """
-    *args, string = input if len(input) > 1 else ("blue", "bold", input[0])  # color arguments, string
+    *args, string = (
+        input if len(input) > 1 else ("blue", "bold", input[0])
+    )  # color arguments, string
     colors = {
         "black": "\033[30m",  # basic colors
         "red": "\033[31m",
@@ -74,7 +83,11 @@ def colorstr(*input):
 
 def methods(instance):
     """Returns list of method names for a class/instance excluding dunder methods."""
-    return [f for f in dir(instance) if callable(getattr(instance, f)) and not f.startswith("__")]
+    return [
+        f
+        for f in dir(instance)
+        if callable(getattr(instance, f)) and not f.startswith("__")
+    ]
 
 
 def set_logging(name=LOGGING_NAME, verbose=True):
@@ -85,8 +98,17 @@ def set_logging(name=LOGGING_NAME, verbose=True):
         {
             "version": 1,
             "disable_existing_loggers": False,
-            "formatters": {name: {"format": colorstr("%(asctime)s") + "-" + colorstr(
-                "%(lineno)s") + "-" + colorstr("%(levelname)s") + ": " + f"%(message)s"}},
+            "formatters": {
+                name: {
+                    "format": colorstr("%(asctime)s")
+                    + "-"
+                    + colorstr("%(lineno)s")
+                    + "-"
+                    + colorstr("%(levelname)s")
+                    + ": "
+                    + "%(message)s"
+                }
+            },
             # "formatters": {name: {"format": "%(asctime)s %(filename)s %(lineno)s %(levelname)s %(message)s"}},
             "handlers": {
                 name: {
@@ -107,7 +129,9 @@ def set_logging(name=LOGGING_NAME, verbose=True):
 
 
 set_logging(LOGGING_NAME)  # run before defining LOGGER
-LOGGER = logging.getLogger(LOGGING_NAME)  # define globally (used in train.py, val.py, detection.py, etc.)
+LOGGER = logging.getLogger(
+    LOGGING_NAME
+)  # define globally (used in train.py, val.py, detection.py, etc.)
 
 
 class Profile(contextlib.ContextDecorator):
@@ -155,11 +179,6 @@ class WorkingDirectory(contextlib.ContextDecorator):
         os.chdir(self.cwd)
 
 
-def methods(instance):
-    # Get class/instance methods
-    return [f for f in dir(instance) if callable(getattr(instance, f)) and not f.startswith("__")]
-
-
 def print_args(args=None, show_file=True, show_func=False):
     # Print function arguments (optional args dict)
     x = inspect.currentframe().f_back  # previous frame
@@ -177,13 +196,21 @@ def print_args(args=None, show_file=True, show_func=False):
 
 def intersect_dicts(da, db, exclude=()):
     # Dictionary intersection of matching keys and shapes, omitting 'exclude' keys, using da values
-    return {k: v for k, v in da.items() if k in db and all(x not in k for x in exclude) and v.shape == db[k].shape}
+    return {
+        k: v
+        for k, v in da.items()
+        if k in db and all(x not in k for x in exclude) and v.shape == db[k].shape
+    }
 
 
 def get_default_args(func):
     # Get func() default arguments
     signature = inspect.signature(func)
-    return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
 
 
 def file_size(path):
@@ -206,15 +233,19 @@ def check_file(file, suffix=""):
         return file
     elif file.startswith("clearml://"):  # ClearML Dataset ID
         assert (
-                "clearml" in sys.modules
+            "clearml" in sys.modules
         ), "ClearML is not installed, so cannot use ClearML dataset. Try running 'pip install clearml'."
         return file
     else:  # search
         files = []
         for d in "data", "models", "utils":  # search directories
-            files.extend(glob.glob(str(ROOT / d / "**" / file), recursive=True))  # find file
+            files.extend(
+                glob.glob(str(ROOT / d / "**" / file), recursive=True)
+            )  # find file
         assert len(files), f"File not found: {file}"  # assert file was found
-        assert len(files) == 1, f"Multiple files match '{file}', specify exact path: {files}"  # assert unique
+        assert (
+            len(files) == 1
+        ), f"Multiple files match '{file}', specify exact path: {files}"  # assert unique
         return files[0]  # return file
 
 
@@ -232,7 +263,9 @@ def increment_path(path, exist_ok=False, sep="", mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
     if path.exists() and not exist_ok:
-        path, suffix = (path.with_suffix(""), path.suffix) if path.is_file() else (path, "")
+        path, suffix = (
+            (path.with_suffix(""), path.suffix) if path.is_file() else (path, "")
+        )
 
         # Method 1
         for n in range(2, 9999):
@@ -274,7 +307,10 @@ def imshow(path, im):
     imshow_(path.encode("unicode_escape").decode(), im)
 
 
-if Path(inspect.stack()[0].filename).parent.parent.as_posix() in inspect.stack()[-1].filename:
+if (
+    Path(inspect.stack()[0].filename).parent.parent.as_posix()
+    in inspect.stack()[-1].filename
+):
     cv2.imread, cv2.imwrite, cv2.imshow = imread, imwrite, imshow  # redefine
 
 # Variables ------------------------------------------------------------------------------------------------------------

@@ -1,10 +1,8 @@
 # coding=utf-8
-import os
 
 import numpy as np
 import torch
 from utils.general import LOGGER
-from utils.plot import Annotator, Colors
 
 
 ##检测框架，集合检测功能

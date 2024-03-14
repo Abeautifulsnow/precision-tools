@@ -127,7 +127,7 @@ class HandleFile:
         matplotlib.rc("font", **{"size": 8})
 
         plt.plot(x[:, -2], x[:, -1])
-        plt.title(f"iou:(0-1) PR curves")
+        plt.title("iou:(0-1) PR curves")
         f = evolve_csv.with_suffix(".png")  # filename
         plt.savefig(f, dpi=200)
         plt.close()

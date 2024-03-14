@@ -4,7 +4,11 @@ import platform
 
 def emojis(str=""):
     """Returns an emoji-safe version of a string, stripped of emojis on Windows platforms."""
-    return str.encode().decode("ascii", "ignore") if platform.system() == "Windows" else str
+    return (
+        str.encode().decode("ascii", "ignore")
+        if platform.system() == "Windows"
+        else str
+    )
 
 
 class TryExcept(contextlib.ContextDecorator):
@@ -19,9 +23,9 @@ class TryExcept(contextlib.ContextDecorator):
         try:
             with open(self.file) as f:
                 filelist = f.readlines()
-                self.msg = 'ok'
+                self.msg = "ok"
         except:
-            self.msg = 'no such file'
+            self.msg = "no such file"
 
     def __exit__(self, exc_type, value, traceback):
         """Context manager exit method that prints an error message with emojis if an exception occurred, always returns
